@@ -4,14 +4,16 @@ setup(
     name='pydocument',
     version='0.0.1',
     description='a pip-installable package',
-    license='MIT',
+    license='PROPRIETARY',
     packages=['pydocument'],
     author='Jordan Osborn',
     author_email='jordanosborn0@gmail.com',
     keywords=['example'],
 	install_requires=[
           'pypandoc',
-		  'pdfminer.six'
+		  'pdfminer.six',
+          'numpy',
+          'pandas'
       ],
     url='https://github.com/jordanosborn/pydocument'
 )
