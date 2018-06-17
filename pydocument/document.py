@@ -41,10 +41,10 @@ class doc:
             elif self.filetype == 'pdf':
                 self._openPDF()
             elif self.filetype == 'xlsx':
-                self._openXLSX
+                self._openXLSX()
         except FileNotFoundError:
             print("File not found!")
-            del self
+            self.close()
 
     def _get(self, variable: str) -> None:
         if variable == 'mimetype':
@@ -152,7 +152,7 @@ class doc:
         """Close file.
 
         Returns:
-            None: [description]
+            None: has no return value
 
         """
         doc.number -= 1

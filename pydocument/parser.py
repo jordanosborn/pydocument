@@ -53,9 +53,9 @@ class parser:
         for n in self.word_tag_capture.finditer(variable_text):
                 parsed += n.group(1)
                 variable_text = variable_text.replace(n.group(1), '')
-        # TODO: Error handling of variable text.
+        # TODO: Error handling of variable text. Non unique name invalid format
         parsed = variable_text + parsed
-
+        print(parsed)
         return {
             'type': '',
             'name': '',
@@ -85,6 +85,7 @@ class parser:
                 pos = m.start()
                 unparsed = m.group(1)
                 parsed_variable_text = self._parse_variable_text(unparsed)
+                # TODO: Name conflict unless type == recall
                 variables[parsed_variable_text['name']] = {
                     'type': parsed_variable_text['type'],
                     'text': parsed_variable_text['text'],
@@ -99,7 +100,6 @@ class parser:
                     self.id[0] + parsed_variable_text['name'] + self.id[1]
                 )
             content.raw['word/document.xml'] = text.encode()
-        print(text)
         return variables
 
     def _render_docx(self, content: str, context: dict) -> str:
