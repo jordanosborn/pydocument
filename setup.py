@@ -1,3 +1,5 @@
+"""Pydocument setup file."""
+
 from setuptools import setup
 
 setup(
@@ -9,11 +11,14 @@ setup(
     author='Jordan Osborn',
     author_email='jordanosborn0@gmail.com',
     keywords=['example'],
-	install_requires=[
-          'pypandoc',
-		  'pdfminer.six',
-          'numpy',
-          'pandas'
-      ],
+    install_requires=[
+        'pypandoc',
+        'pdfminer.six',
+        'numpy',
+        'pandas',
+        'bs4',
+        'magic',
+        'mimetypes'
+    ],
     url='https://github.com/jordanosborn/pydocument'
 )

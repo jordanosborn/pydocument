@@ -1,3 +1,11 @@
 .vscode/*
 pydocument/__pycache__/*
 documents/
+demo/*
+test.html
+temp.html
+temp.docx
+test.txt
+conv.html
+file.docx
+*.pyc
