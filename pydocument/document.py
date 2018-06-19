@@ -34,7 +34,7 @@ class doc:
         self.filepath = filepath
         try:
             self.mimetype = mime.from_file(self.filepath)
-            self.filetype = mimetypes.guess_extension(self.mimetype)[1:]
+            self.filetype = str(mimetypes.guess_extension(self.mimetype))[1:]
             self.filename = filepath.split('/')[-1].split('.')[0]
             if self.filetype == 'docx':
                 self._openDOCX()
@@ -138,7 +138,7 @@ class doc:
         fp = open(self.filepath, 'rb')
         for page in PDFPage.get_pages(fp, check_extractable=False):
             interpreter.process_page(page)
-        self.raw = fp.read()
+        self.raw = {'document.pdf': fp.read()}
         fp.close()
 
         # Get text from BytesIO
