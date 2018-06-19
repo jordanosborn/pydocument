@@ -3,6 +3,7 @@ import re
 from collections import OrderedDict
 from pydocument.document import doc
 import pydocument.utils as utils
+import pydocument.generators as generators
 from typing import Callable
 
 KEYWORDS: list = [
@@ -19,6 +20,8 @@ KEYWORDS: list = [
 USER_KEYWORDS: list = []
 
 FUNCTIONS: dict = {key: None for key in KEYWORDS}
+
+FUNCTIONS['RECALL'] = generators.builtin.recall
 
 USER_FUNCTIONS: dict = {}
 
@@ -39,7 +42,7 @@ OPERATORS: dict = {
         'eq': '==',
         'lt': '<',
         'gt': '>',
-        'lte': ['<=','=<'],
+        'lte': ['<=', '=<'],
         'gte': ['>=', '=>'],
         'mlt': '<<',
         'mgt': '>>',
@@ -58,6 +61,8 @@ OPERATORS: dict = {
         'while': 'WHILE'
     }
 }
+
+INTERNAL_VARIABLE_KEY = '_'
 
 
 def create_keyword(keyword: str, function: Callable[[str], str]) -> None:
@@ -79,15 +84,15 @@ def create_keyword(keyword: str, function: Callable[[str], str]) -> None:
 
 
 def find_function(keyword: str) -> Callable[[str], str]:
-    """Find generator function for keyword
-    
+    """Find generator function for keyword.
+
     Arguments:
-        keyword {str} -- keyword 
-    
+        keyword {str} -- keyword
+
     Returns:
         Callable[[str], str] -- generator function for keyword
-    """
 
+    """
     if keyword in FUNCTIONS.keys():
         return FUNCTIONS[keyword]
     elif keyword in USER_FUNCTIONS.keys():
@@ -167,12 +172,17 @@ class parser:
                 keyword = 'RECALL'
                 name = parsed_text_split[0]
             else:
-                raise ValueError(f'\nUnrecognisable variable string {variable_text}.\n')
+                raise ValueError(f'\nUnrecognisable variable string\n\t{variable_text}.\n')
         # TODO: be careful with unnamed variables, unique name and
         else:
-            print(parsed_text_split)
-            if len(parsed_text_split) > 1:
+            if len(parsed_text_split) > 1 and keyword != 'EVAL':
                 name = parsed_text_split[1]
+
+        if name != '' and name[0] == INTERNAL_VARIABLE_KEY:
+            raise ValueError(
+                f'\nInvalid variable name {name}. Variables can\'t start with {INTERNAL_VARIABLE_KEY}.' +
+                f'\n\t{variable_text}\n'
+            )
 
         return {
             'type': keyword,
@@ -208,8 +218,6 @@ class parser:
                 except ValueError as e:
                     print(e)
                 else:
-                    # TODO: Name conflict unless type == recall,
-                    # Try catch value error unrecognisable string
                     if parsed_variable_text['name'] not in variables.keys() or parsed_variable_text['type'] == 'RECALL':
                         variables[parsed_variable_text['name']] = {
                             'type': parsed_variable_text['type'],
@@ -228,13 +236,12 @@ class parser:
                             self.id[0] + parsed_variable_text['name'] + self.id[1]
                         )
                     else:
-                        print('\n',
-                            f'Redifinition of variable {parsed_variable_text["name"]}',
+                        print(
+                            f'\nRedifinition of variable {parsed_variable_text["name"]}',
                             f'\n\t{variables[parsed_variable_text["name"]]["text"]}',
                             f'at {variables[parsed_variable_text["name"]]["position"]}.',
                             f'\n\t{parsed_variable_text["text"]}',
-                            f' at {pos}.',
-                            '\n'
+                            f' at {pos}.\n'
                         )
             content.raw['word/document.xml'] = text.encode()
             return variables

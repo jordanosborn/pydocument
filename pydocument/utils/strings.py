@@ -28,6 +28,26 @@ def strip_list(ls: list) -> list:
         return ['']
 
 
+def search_list(ls: list, search: str) -> int:
+    """Search list of strings for first instance of substring.
+
+    Arguments:
+        ls {list} -- list to search
+        search {str} -- string to search for
+
+    Returns:
+        int - returns index of list item that contains the first instance
+        of the search string
+
+    """
+    index = -1
+    for i, s in enumerate(ls):
+        if search in s:
+            index = i
+            break
+    return index
+
+
 def split_string(text: str, splitter: str = ',') -> list:
     """Split string at splitter when splitter is not enclosed in quotes.
 
