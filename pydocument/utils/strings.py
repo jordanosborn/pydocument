@@ -55,5 +55,4 @@ def split_string(text: str, splitter: str = ',') -> list:
                 text_split[i] = t.replace(f'\'{j}\'', f'\'{s}\'')
         return text_split
     else:
-        print('hu')
         return ['']

@@ -3,6 +3,7 @@ import re
 from collections import OrderedDict
 from pydocument.document import doc
 import pydocument.utils as utils
+from typing import Callable
 
 KEYWORDS: list = [
     'DATE',
@@ -15,9 +16,86 @@ KEYWORDS: list = [
     'TEXT'
 ]
 
+USER_KEYWORDS: list = []
+
+FUNCTIONS: dict = {key: None for key in KEYWORDS}
+
+USER_FUNCTIONS: dict = {}
+
 KEYWORD_MODIFIERS: list = [
     'p'
 ]
+
+OPERATORS: dict = {
+    'arithmetic': {
+        '+',
+        '-',
+        '/',
+        '*',
+        '%'
+    },
+    'comparison': {
+        'neq': '!=',
+        'eq': '==',
+        'lt': '<',
+        'gt': '>',
+        'lte': ['<=','=<'],
+        'gte': ['>=', '=>'],
+        'mlt': '<<',
+        'mgt': '>>',
+        'and': 'and',
+        'or': 'or',
+        'not': 'not'
+    },
+    'assignment': {
+        '=',
+    },
+    'control': {
+        'if': 'IF',
+        'else': 'ELSE',
+        'elseif': 'ELSEIF',
+        'for': 'FOR',
+        'while': 'WHILE'
+    }
+}
+
+
+def create_keyword(keyword: str, function: Callable[[str], str]) -> None:
+    """Create a keyword by passing in a keyword and a generator function.
+
+    Arguments:
+        keyword {str} -- keyword to create
+        function {Callable[[str]]} -- function that generates a value
+
+    """
+    if keyword not in KEYWORDS and keyword not in USER_KEYWORDS:
+        USER_KEYWORDS.append(keyword)
+        USER_FUNCTIONS[keyword] = function
+    elif keyword in KEYWORDS:
+        print(f"Can't redefine the built in keyword: {keyword}.")
+    elif keyword in USER_KEYWORDS:
+        print(f"Redifining the user defined keyword: {keyword}.")
+        USER_FUNCTIONS[keyword] = function
+
+
+def find_function(keyword: str) -> Callable[[str], str]:
+    """Find generator function for keyword
+    
+    Arguments:
+        keyword {str} -- keyword 
+    
+    Returns:
+        Callable[[str], str] -- generator function for keyword
+    """
+
+    if keyword in FUNCTIONS.keys():
+        return FUNCTIONS[keyword]
+    elif keyword in USER_FUNCTIONS.keys():
+        return USER_FUNCTIONS[keyword]
+    elif keyword == 'RECALL':
+        return lambda x: ''
+    else:
+        return lambda x: ''
 
 
 class parser:
@@ -69,14 +147,12 @@ class parser:
 
         # Split string into expression and its arguments.
         parsed_text_split = utils.strings.split_string(parsed_text, ',')
-        print(parsed_text_split)
         if len(parsed_text_split) > 1:
             args = parsed_text_split[1:]
         parsed_text_split = utils.strings.strip_list(parsed_text_split[0].split())
-        print(parsed_text_split)
         # Find type
         keyword: str = ''
-        for word in KEYWORDS:
+        for word in KEYWORDS + USER_KEYWORDS:
             for modifier in KEYWORD_MODIFIERS:
                 if parsed_text_split[0] == word:
                     keyword = word
@@ -91,7 +167,7 @@ class parser:
                 keyword = 'RECALL'
                 name = parsed_text_split[0]
             else:
-                raise ValueError(f'Unrecognisable variable string {variable_text}')
+                raise ValueError(f'\nUnrecognisable variable string {variable_text}.\n')
         # TODO: be careful with unnamed variables, unique name and
         else:
             print(parsed_text_split)
@@ -142,7 +218,8 @@ class parser:
                             'expression': parsed_variable_text['expression'],
                             'args': parsed_variable_text['args'],
                             'position': pos,
-                            'modifiers': parsed_variable_text['modifiers']
+                            'modifiers': parsed_variable_text['modifiers'],
+                            'function': find_function(parsed_variable_text['type'])
                         }
                         parsed = parsed_variable_text['parsed']
                         # TODO: need variable versions so can have different arguments for recalled variables.
@@ -151,10 +228,13 @@ class parser:
                             self.id[0] + parsed_variable_text['name'] + self.id[1]
                         )
                     else:
-                        print(
+                        print('\n',
                             f'Redifinition of variable {parsed_variable_text["name"]}',
-                            f'\n{variables[parsed_variable_text["name"]]["text"]}',
-                            f'\n{parsed_variable_text["text"]}'
+                            f'\n\t{variables[parsed_variable_text["name"]]["text"]}',
+                            f'at {variables[parsed_variable_text["name"]]["position"]}.',
+                            f'\n\t{parsed_variable_text["text"]}',
+                            f' at {pos}.',
+                            '\n'
                         )
             content.raw['word/document.xml'] = text.encode()
             return variables
