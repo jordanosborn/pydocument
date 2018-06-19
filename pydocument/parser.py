@@ -2,6 +2,7 @@
 import re
 from collections import OrderedDict
 from pydocument.document import doc
+import pydocument.utils as utils
 
 KEYWORDS: list = [
     'DATE',
@@ -9,7 +10,13 @@ KEYWORDS: list = [
     'NAME',
     'EVAL',
     'CURRENCY',
-    'ADDRESS'
+    'ADDRESS',
+    'CODE',
+    'TEXT'
+]
+
+KEYWORD_MODIFIERS: list = [
+    'p'
 ]
 
 
@@ -28,7 +35,6 @@ class parser:
         # [<]([w][:][\w])[ ]+?([\w\s\S]*?)[>]([\w\s\S]*?)([<][\/](\1)?[>])$
         # Matches word tag pairs
         self.variable_regex = re.compile(r"(?<!\\)([$][{][^}]*[}]{1})")
-        self.string_regex = re.compile(r'([\u2018][\w\s\S]*?[\u2019]|[\'][\w\s\S]*?[\']|["][\w\s\S]*?["]|[\u201C][\w\s\S]*?[\u201D])')
         if self.parser_type == 'docx':
             self.parse = self._parse_docx
             self.render = self._render_docx
@@ -58,31 +64,49 @@ class parser:
         parsed_text = variable_text[len(self.id[0]): -len(self.id[1])].strip()
 
         args: list = []
+        modifiers: list = []
+        name: str = ''
+
         # Split string into expression and its arguments.
-        strings = []
-        for i, n in enumerate(self.string_regex.finditer(parsed_text)):
-            strings.append(str(n.group(1)[1:-1]))
-            parsed_text = parsed_text.replace(n.group(1), f'\'{i}\'')
-        parsed_text_split = parsed_text.split(',')
-
-        for i, t in enumerate(parsed_text_split):
-            parsed_text_split[i] = parsed_text_split[i].strip()
-            for j, s in enumerate(strings):
-                parsed_text_split[i] = t.replace(f'\'{j}\'', f'\'{s}\'')
-
-        parsed_text = parsed_text_split[0]
+        parsed_text_split = utils.strings.split_string(parsed_text, ',')
+        print(parsed_text_split)
         if len(parsed_text_split) > 1:
             args = parsed_text_split[1:]
-        print(parsed_text, args)
+        parsed_text_split = utils.strings.strip_list(parsed_text_split[0].split())
+        print(parsed_text_split)
+        # Find type
+        keyword: str = ''
+        for word in KEYWORDS:
+            for modifier in KEYWORD_MODIFIERS:
+                if parsed_text_split[0] == word:
+                    keyword = word
+                    break
+                elif parsed_text_split[0] == modifier + word:
+                    keyword = word
+                    modifiers.append(modifier)
+                    break
+
+        if keyword == '':
+            if len(parsed_text_split) == 1:
+                keyword = 'RECALL'
+                name = parsed_text_split[0]
+            else:
+                raise ValueError(f'Unrecognisable variable string {variable_text}')
+        # TODO: be careful with unnamed variables, unique name and
+        else:
+            print(parsed_text_split)
+            if len(parsed_text_split) > 1:
+                name = parsed_text_split[1]
 
         return {
-            'type': '',
-            'name': '',
+            'type': keyword,
+            'name': name,
             'text': variable_text,
             'operator': '',
             'expression': '',
             'args': args,
-            'parsed': parsed
+            'parsed': parsed,
+            'modifiers': modifiers
         }
 
     def _parse_docx(self, content: doc) -> OrderedDict:
@@ -103,21 +127,35 @@ class parser:
             for m in self.variable_regex.finditer(text):
                 pos = m.start()
                 unparsed = m.group(1)
-                parsed_variable_text = self._parse_variable_text(unparsed)
-                # TODO: Name conflict unless type == recall
-                variables[parsed_variable_text['name']] = {
-                    'type': parsed_variable_text['type'],
-                    'text': parsed_variable_text['text'],
-                    'operator': parsed_variable_text['operator'],
-                    'expression': parsed_variable_text['expression'],
-                    'args': parsed_variable_text['args'],
-                    'position': pos
-                }
-                parsed = parsed_variable_text['parsed']
-                text = text.replace(unparsed, parsed).replace(
-                    parsed_variable_text['text'],
-                    self.id[0] + parsed_variable_text['name'] + self.id[1]
-                )
+                try:
+                    parsed_variable_text = self._parse_variable_text(unparsed)
+                except ValueError as e:
+                    print(e)
+                else:
+                    # TODO: Name conflict unless type == recall,
+                    # Try catch value error unrecognisable string
+                    if parsed_variable_text['name'] not in variables.keys() or parsed_variable_text['type'] == 'RECALL':
+                        variables[parsed_variable_text['name']] = {
+                            'type': parsed_variable_text['type'],
+                            'text': parsed_variable_text['text'],
+                            'operator': parsed_variable_text['operator'],
+                            'expression': parsed_variable_text['expression'],
+                            'args': parsed_variable_text['args'],
+                            'position': pos,
+                            'modifiers': parsed_variable_text['modifiers']
+                        }
+                        parsed = parsed_variable_text['parsed']
+                        # TODO: need variable versions so can have different arguments for recalled variables.
+                        text = text.replace(unparsed, parsed).replace(
+                            parsed_variable_text['text'],
+                            self.id[0] + parsed_variable_text['name'] + self.id[1]
+                        )
+                    else:
+                        print(
+                            f'Redifinition of variable {parsed_variable_text["name"]}',
+                            f'\n{variables[parsed_variable_text["name"]]["text"]}',
+                            f'\n{parsed_variable_text["text"]}'
+                        )
             content.raw['word/document.xml'] = text.encode()
             return variables
         else:
