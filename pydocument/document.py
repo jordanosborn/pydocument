@@ -37,7 +37,7 @@ class doc:
         doc.number += 1
         mime = magic.Magic(mime=True)
         self.filepath: str = filepath
-        self.raw: Dict[str, bytes]
+        self.__raw: Dict[str, bytes]
         self.text: str
         self.paragraphs: List[str]
 
@@ -78,7 +78,7 @@ class doc:
         a = cls('')
         a.filename = filename
         a.filetype = filetype
-        a.raw = raw_content
+        a.__raw = raw_content
         # TODO: _extract_text method
         a.text = str(raw_content[list(raw_content.keys())[0]])
         return a
@@ -97,6 +97,16 @@ class doc:
             print(self.mimetype)
         elif variable == 'filetype':
             print(self.filetype)
+
+    @property
+    def raw(self) -> Dict[str, bytes]:
+        """Return raw file contents.
+
+        Returns:
+            Dict[str, bytes] -- file contents.
+
+        """
+        return self.__raw
 
     def replace(self, context: dict = {}, output: str = '') -> None:
         """Replace key/value pairs in document.
@@ -159,7 +169,7 @@ class doc:
 
         """
         if self.filetype == 'docx':
-            soup = BeautifulSoup(self.raw['word/document.xml'], "xml")
+            soup = BeautifulSoup(self.__raw['word/document.xml'], "xml")
             self.paragraphs = soup.findAll('w:p')
             for i, p in enumerate(self.paragraphs):
                 soup = BeautifulSoup(str(p), 'xml')
@@ -172,7 +182,7 @@ class doc:
             file = BytesIO(f.read())
         zipfile_ob = ZipFile(file)
         # substructure of document
-        self.raw = {
+        self.__raw = {
             name: zipfile_ob.read(name) for name in zipfile_ob.namelist()
         }
         # Split by W:P tags and get text
@@ -184,7 +194,7 @@ class doc:
             file = BytesIO(f.read())
         zipfile_ob = ZipFile(file)
         # substructure of document
-        self.raw = {
+        self.__raw = {
             name: zipfile_ob.read(name) for name in zipfile_ob.namelist()
         }
     # use lib/pdftohtml instead?
@@ -203,7 +213,7 @@ class doc:
         fp = open(self.filepath, 'rb')
         for page in PDFPage.get_pages(fp, check_extractable=False):
             interpreter.process_page(page)
-        self.raw = {'document.pdf': fp.read()}
+        self.__raw = {'document.pdf': fp.read()}
         fp.close()
 
         # Get text from BytesIO
