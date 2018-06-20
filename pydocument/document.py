@@ -1,6 +1,8 @@
 """Manages different document types."""
 from io import BytesIO
 from zipfile import ZipFile
+# from __future__ import annotations
+from typing import Dict, List, Any
 
 import mimetypes
 import magic
@@ -9,6 +11,9 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.converter import HTMLConverter, TextConverter
 from pdfminer.layout import LAParams
+from bs4 import BeautifulSoup
+
+import pydocument.utils as utils
 
 
 class doc:
@@ -17,7 +22,7 @@ class doc:
     Handles different document types
     """
 
-    number = 0
+    number: int = 0
 
     def __init__(self, filepath: str) -> None:
         """Initialise document.
@@ -31,20 +36,61 @@ class doc:
         """
         doc.number += 1
         mime = magic.Magic(mime=True)
-        self.filepath = filepath
-        try:
-            self.mimetype = mime.from_file(self.filepath)
-            self.filetype = str(mimetypes.guess_extension(self.mimetype))[1:]
-            self.filename = filepath.split('/')[-1].split('.')[0]
-            if self.filetype == 'docx':
-                self._openDOCX()
-            elif self.filetype == 'pdf':
-                self._openPDF()
-            elif self.filetype == 'xlsx':
-                self._openXLSX()
-        except FileNotFoundError:
-            print("File not found!")
-            self.close()
+        self.filepath: str = filepath
+        self.raw: Dict[str, bytes]
+        self.text: str
+        self.paragraphs: List[str]
+
+        # TODO: not ideal
+        if filepath != '':
+            try:
+                self.mimetype = mime.from_file(self.filepath)
+            except FileNotFoundError:
+                print("File not found!")
+                self.close()
+            else:
+                self.filetype = str(mimetypes.guess_extension(self.mimetype))[1:]
+                self.filename = filepath.split('/')[-1].split('.')[0]
+                if self.filetype == 'docx':
+                    self._openDOCX()
+                elif self.filetype == 'pdf':
+                    self._openPDF()
+                elif self.filetype == 'xlsx':
+                    self._openXLSX()
+                else:
+                    # TODO: unknown file type path etc.
+                    pass
+
+    # TODO: when python3.7 alter any to doc.
+    @classmethod
+    def from_raw(cls, filename: str, filetype: str, raw_content: Dict[str, bytes]) -> Any:
+        """Create document object from raw.
+
+        Arguments:
+            filename {str} -- name of file
+            filetype {str} -- type of file
+            raw_content {dict[str, BytesIO]} -- dict of file structure
+
+        Returns:
+            None -- no return value
+
+        """
+        a = cls('')
+        a.filename = filename
+        a.filetype = filetype
+        a.raw = raw_content
+        # TODO: _extract_text method
+        a.text = str(raw_content[list(raw_content.keys())[0]])
+        return a
+
+    def __str__(self) -> str:
+        """Return string version of document.
+
+        Returns:
+            {str} -- str form of document
+
+        """
+        return self.text
 
     def _get(self, variable: str) -> None:
         if variable == 'mimetype':
@@ -63,9 +109,10 @@ class doc:
             None -- [description]
 
         """
+        # TODO: is broken currently.
         if len(context) != 0:
             for key in context.keys():
-                replaced_text = self.text.replace(key, context[key])
+                replaced_text = ''.replace(key, context[key])
             self.save(replaced_text, output)
 
     def save(self, text: str, output: str) -> None:
@@ -86,22 +133,38 @@ class doc:
         else:
             pass
 
-    def convert(self, output: str) -> None:
+    def convert(self, filetype: str) -> None:
         """Convert file into different format.
 
         Arguments:
-            output (str): [description]
+            filetype (str): output filetype
 
         Returns:
             None: has no return value.
 
         """
-        self.text = pypandoc.convert_file(
+        text = pypandoc.convert_file(
             self.filepath,
-            'html5',
+            filetype,
             format=self.filetype,
-            extra_args='--extract-media ./' + output
+            # extra_args='--extract-media ./' + output
         )
+        return text
+
+    def _extract_text(self) -> None:
+        """Extract text from raw file.
+
+        Returns:
+            None -- has no return value.
+
+        """
+        if self.filetype == 'docx':
+            soup = BeautifulSoup(self.raw['word/document.xml'], "xml")
+            self.paragraphs = soup.findAll('w:p')
+            for i, p in enumerate(self.paragraphs):
+                soup = BeautifulSoup(str(p), 'xml')
+                self.paragraphs[i] = soup.get_text()
+            self.text = utils.strings.join_all(self.paragraphs, '\n')
 
     def _openDOCX(self) -> None:
         """Open docx file and store its contents."""
@@ -112,6 +175,8 @@ class doc:
         self.raw = {
             name: zipfile_ob.read(name) for name in zipfile_ob.namelist()
         }
+        # Split by W:P tags and get text
+        self._extract_text()
 
     def _openXLSX(self) -> None:
         """Open excel file and store its contents."""
@@ -142,7 +207,7 @@ class doc:
         fp.close()
 
         # Get text from BytesIO
-        self.text = sio.getvalue()
+        # text = sio.getvalue()
 
         # Cleanup
         device.close()
