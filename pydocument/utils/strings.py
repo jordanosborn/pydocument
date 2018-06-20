@@ -1,5 +1,6 @@
 """Strings utility file."""
 import re
+from typing import List
 
 char_Set = dict(
     l_dbl_quote=u'\u201C',
@@ -76,3 +77,17 @@ def split_string(text: str, splitter: str = ',') -> list:
         return text_split
     else:
         return ['']
+
+
+def join_all(ls: List[str], join_char: str) -> str:
+    """Join all strings in a list.
+
+    Arguments:
+        ls {List[str]} -- list to join in to single string
+        join_char {str} -- character to seperate concatenated strings
+
+    Returns:
+        str -- return concatenated list
+
+    """
+    return ''.join(s + join_char for s in ls)[0:-1]
