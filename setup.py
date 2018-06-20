@@ -18,7 +18,8 @@ setup(
         'pandas',
         'bs4',
         'magic',
-        'mimetypes'
+        'mimetypes',
+        'lxml'
     ],
     url='https://github.com/jordanosborn/pydocument'
 )
