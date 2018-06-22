@@ -22,7 +22,7 @@ class doc:
     Handles different document types
     """
 
-    number: int = 0
+    number = 0
 
     def __init__(self, filepath: str) -> None:
         """Initialise document.
@@ -36,10 +36,7 @@ class doc:
         """
         doc.number += 1
         mime = magic.Magic(mime=True)
-        self.filepath: str = filepath
-        self.__raw: Dict[str, bytes]
-        self.text: str
-        self.paragraphs: List[str]
+        self.filepath = filepath
 
         # TODO: not ideal
         if filepath != '':

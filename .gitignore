@@ -10,4 +10,5 @@ conv.html
 file.docx
 *.pyc
 *.o
+*.so
 *.c

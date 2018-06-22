@@ -6,7 +6,7 @@ import pydocument.utils as utils
 import pydocument.generators as generators
 from typing import Callable
 
-KEYWORDS: list = [
+KEYWORDS = [
     'DATE',
     'NUMBER',
     'NAME',
@@ -17,19 +17,19 @@ KEYWORDS: list = [
     'TEXT'
 ]
 
-USER_KEYWORDS: list = []
+USER_KEYWORDS = []
 
-FUNCTIONS: dict = {key: None for key in KEYWORDS}
+FUNCTIONS = {key: None for key in KEYWORDS}
 
 FUNCTIONS['RECALL'] = generators.builtin.recall
 
-USER_FUNCTIONS: dict = {}
+USER_FUNCTIONS = {}
 
-KEYWORD_MODIFIERS: list = [
+KEYWORD_MODIFIERS = [
     'p'
 ]
 
-OPERATORS: dict = {
+OPERATORS = {
     'arithmetic': {
         '+',
         '-',
@@ -146,9 +146,9 @@ class parser:
 
         parsed_text = variable_text[len(self.id[0]): -len(self.id[1])].strip()
 
-        args: list = []
-        modifiers: list = []
-        name: str = ''
+        args = []
+        modifiers = []
+        name = ''
 
         # Split string into expression and its arguments.
         parsed_text_split = utils.strings.split_string(parsed_text, ',')
@@ -156,7 +156,7 @@ class parser:
             args = parsed_text_split[1:]
         parsed_text_split = utils.strings.strip_list(parsed_text_split[0].split())
         # Find type
-        keyword: str = ''
+        keyword = ''
         for word in KEYWORDS + USER_KEYWORDS:
             for modifier in KEYWORD_MODIFIERS:
                 if parsed_text_split[0] == word:
@@ -205,7 +205,7 @@ class parser:
             variables {dict} -- dict of var name and value pairs.
 
         """
-        variables: OrderedDict = OrderedDict()
+        variables = OrderedDict()
 
         if content.filetype == 'docx':
             # TODO: other files contain text information
