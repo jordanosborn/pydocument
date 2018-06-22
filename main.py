@@ -1,3 +1,0 @@
-import pydocument
-
-print(pydocument)
