@@ -9,3 +9,5 @@ test.txt
 conv.html
 file.docx
 *.pyc
+*.o
+*.c
