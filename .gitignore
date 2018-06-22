@@ -12,3 +12,5 @@ file.docx
 *.o
 *.so
 *.c
+build/run/*
+dist/*
