@@ -1,2 +1,2 @@
 """Init generators."""
-import builtin
+import pydocument.generators.builtin

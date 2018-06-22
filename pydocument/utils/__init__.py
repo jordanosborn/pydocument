@@ -1,2 +1,2 @@
 """Utilities."""
-import strings
+import pydocument.utils.strings
