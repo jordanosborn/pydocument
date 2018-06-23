@@ -177,7 +177,7 @@ class parser:
 
         unnamed_variable = False
         if keyword == '':
-            if len(parsed_text_split) == 1:
+            if len(parsed_text_split) == 1 and parsed_text_split[0] != '':
                 keyword = 'RECALL'
                 name = parsed_text_split[0]
             else:
