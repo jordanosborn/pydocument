@@ -1,6 +1,8 @@
 """Templater class."""
 
+from copy import deepcopy
 from pydocument.document import doc
+import json
 
 class templater:
     """Template class."""
@@ -20,7 +22,9 @@ class templater:
         """
 
         self.template = template
-        self.settings = settings
+        with open(settings, 'r') as f:
+            self.settings = json.loads(f)
+
         self.output_folder = output_folder
         self.naming_convention = naming_convention
 
