@@ -2,7 +2,11 @@
 
 from copy import deepcopy
 from pydocument.document import doc
+from pydocument.parser import parser
 import json
+from collections import OrderedDict
+
+from multiprocessing.dummy import Pool
 
 class templater:
     """Template class."""
@@ -21,12 +25,23 @@ class templater:
 
         """
 
-        self.template = template
+        self.template = deepcopy(template)
         with open(settings, 'r') as f:
-            self.settings = json.loads(f)
+            self.settings = json.loads(f.read())
 
         self.output_folder = output_folder
         self.naming_convention = naming_convention
+        self.parser = parser(template.get('filetype'))
 
-    def generate(self, number: int = -1):
-        pass
+    def generate(self, number: int = -1) -> None:
+        """[summary]
+
+        Keyword Arguments:
+            number {int} -- number to generate leave blank if constructing from data (default: {-1})
+
+        Returns:
+            None -- no return value
+
+        """
+        self.variables = self.parser.parse(self.template)
+        print(self.variables)

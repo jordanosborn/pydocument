@@ -89,11 +89,11 @@ class doc:
         """
         return self.text
 
-    def _get(self, variable: str) -> None:
+    def get(self, variable: str) -> None:
         if variable == 'mimetype':
-            print(self.mimetype)
+            return self.mimetype
         elif variable == 'filetype':
-            print(self.filetype)
+            return self.filetype
 
     @property
     def raw(self) -> Dict[str, bytes]:

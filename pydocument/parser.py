@@ -301,7 +301,8 @@ class parser:
                             'args': parsed_variable_text['args'],
                             'position': pos,
                             'modifiers': parsed_variable_text['modifiers'],
-                            'function': find_function(parsed_variable_text['type'])
+                            'function': find_function(parsed_variable_text['type']),
+                            'value': ''
                         }
                         parsed = parsed_variable_text['parsed']
                         # TODO: need variable versions so can have different arguments for recalled variables.
@@ -319,11 +320,28 @@ class parser:
                         )
             content.raw['word/document.xml'] = text.encode()
             self._reset_counter()
-            return variables
+            return self._infer_variable_types(variables)
         else:
             print('Invalid file passed to Docx parser.')
             self._reset_counter()
             return OrderedDict()
+
+    def _infer_variable_types(self, variables: OrderedDict) -> OrderedDict:
+        """Infer variable types from expressions and keywords. Throw errors if invalid.
+
+        Arguments:
+            variables {OrderedDict} -- variables
+
+        Returns:
+            OrderedDict -- variables with infered types.
+        """
+        for key, value in variables.items():
+            if value['keyword'] == 'RECALL'
+                
+            elif value['keyword'] == 'EVAL':
+                pass
+            else:
+                variables[key]['type'] = value['keyword']
 
     def _render_docx(self, content: str, context: dict) -> str:
         """Render document based on context.

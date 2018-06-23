@@ -3,10 +3,10 @@
 
 def main():
     """Run main."""
-    from pydocument import doc, docx_parser, templater
+    from pydocument import doc, templater
     a = doc('demo2.docx')
     t = templater(a, 'settings.json', 'output', ('contract', 'NAME', ' '))
-    docx_parser.parse(a)
-    a.save('output.docx')
+    t.generate(10)
+
 
 main()
