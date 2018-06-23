@@ -69,7 +69,6 @@ def split_string(text: str, splitter: str = ',') -> list:
             strings.append(str(n.group(1)[1:-1]))
             text = text.replace(str(n.group(1)), f'\'{i}\'', 1)
         text_split = text.split(splitter)
-        print(text_split)
         for i in range(len(text_split)):
             text_split[i] = text_split[i].strip()
             for j, s in enumerate(strings):
@@ -78,7 +77,6 @@ def split_string(text: str, splitter: str = ',') -> list:
     else:
         return ['']
 
-print(split_string("'hell,,o' my ,name 'i,,s'"))
 
 def join_all(ls: List[str], join_char: str) -> str:
     """Join all strings in a list.
