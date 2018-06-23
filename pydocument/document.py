@@ -120,9 +120,9 @@ class doc:
         if len(context) != 0:
             for key in context.keys():
                 replaced_text = ''.replace(key, context[key])
-            self.save(replaced_text, output)
+            self.save(output)
 
-    def save(self, text: str, output: str) -> None:
+    def save(self, output: str) -> None:
         """Save document in format.
 
         Arguments:
@@ -136,7 +136,12 @@ class doc:
         # Handle file types here docx etc.
         filetype = output.split('.')[-1]
         if filetype == self.filetype:
-            pass
+            if self.filetype == 'docx':
+                zip_file = ZipFile(output, "w")
+                for key, value in self.raw.items():
+                    zip_file.writestr(key, value)
+                zip_file.close()
+
         else:
             pass
 

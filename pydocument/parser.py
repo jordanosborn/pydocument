@@ -144,13 +144,15 @@ class parser:
             {bool} -- true/false if expression is valid or not.
 
         """
+
+        # TODO: expression check.
         valid = False
         if expression == '':
             valid = True
         elif expr_type == 'EVAL':
-            pass
+            valid = True
         elif expr_type == 'TEXT':
-            pass
+            valid = True
 
         return valid
 

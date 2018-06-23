@@ -7,6 +7,6 @@ def main():
     a = doc('demo2.docx')
 
     docx_parser.parse(a)
-
+    a.save('output.docx')
 
 main()
