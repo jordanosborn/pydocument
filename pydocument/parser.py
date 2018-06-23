@@ -335,12 +335,14 @@ class parser:
 
         Returns:
             OrderedDict -- variables with infered types.
+
         """
         for key, value in variables.items():
             if value['keyword'] == 'RECALL':
                 variables[key]['type'] = variables[key.replace('_RECALL_', '')]['keyword']
 
             elif value['keyword'] == 'EVAL':
+                # TODO: infer from type of expression.
                 pass
             else:
                 variables[key]['type'] = value['keyword']
