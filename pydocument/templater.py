@@ -33,8 +33,19 @@ class templater:
         self.naming_convention = naming_convention
         self.parser = parser(template.get('filetype'))
 
+    def _save_context(self, outputt: str) -> None:
+        """Save the currently generated context.
+
+        Arguments:
+            output {str} -- output file.
+
+        Returns:
+            None -- no return value
+        """
+        pass
+
     def generate(self, number: int = -1) -> None:
-        """[summary]
+        """Generate documents.
 
         Keyword Arguments:
             number {int} -- number to generate leave blank if constructing from data (default: {-1})

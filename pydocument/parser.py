@@ -348,7 +348,7 @@ class parser:
                 variables[key]['type'] = value['keyword']
         return variables
 
-    def _render_docx(self, content: str, context: dict) -> str:
+    def _render_docx(self, content: doc, context: dict) -> str:
         """Render document based on context.
 
         Arguments:
