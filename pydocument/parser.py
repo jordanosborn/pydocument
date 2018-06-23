@@ -202,7 +202,8 @@ class parser:
         if keyword == '':
             if len(parsed_text_split) == 1 and parsed_text_split[0] != '':
                 keyword = 'RECALL'
-                name = parsed_text_split[0]
+                name = f'_RECALL_{parsed_text_split[0]}'
+                unnamed_variable = True
             else:
                 raise ValueError(f'\nUnrecognisable variable string\n\t{variable_text}.\n')
         # TODO: be careful with unnamed variables, unique name and
@@ -336,12 +337,14 @@ class parser:
             OrderedDict -- variables with infered types.
         """
         for key, value in variables.items():
-            if value['keyword'] == 'RECALL'
-                
+            if value['keyword'] == 'RECALL':
+                variables[key]['type'] = variables[key.replace('_RECALL_', '')]['keyword']
+
             elif value['keyword'] == 'EVAL':
                 pass
             else:
                 variables[key]['type'] = value['keyword']
+        return variables
 
     def _render_docx(self, content: str, context: dict) -> str:
         """Render document based on context.
