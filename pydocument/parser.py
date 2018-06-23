@@ -133,6 +133,27 @@ class parser:
                 r"([<][w][:][\w\s\S]*?[>]|[<][\/][w][:][\w]*?[>])")
             # TODO: Look for non-matching ${
 
+    def _valid_expression(self, expr_type, expression) -> bool:
+        """Check if expression is valid.
+
+        Arguments:
+            expr_type {str} -- type to return
+            expression {str} -- expression to check
+
+        Returns:
+            {bool} -- true/false if expression is valid or not.
+
+        """
+        valid = False
+        if expr_type == 'EVAL':
+            pass
+        elif expr_type == 'TEXT':
+            pass
+        else:
+            pass
+
+        return valid
+
     def _parse_variable_text(self, variable_text: str) -> dict:
         """Parse variable text that has been embedded in a document.
 
@@ -222,7 +243,7 @@ class parser:
                 f'\nInvalid variable name {name}. Variables can\'t start with {INTERNAL_VARIABLE_KEY}.' +
                 f'\n\t{variable_text}\n'
             )
-        print(keyword, name, operator, expression)
+
         self.type_counter[keyword] += 1
         return {
             'keyword': keyword,
@@ -287,6 +308,7 @@ class parser:
                         )
             content.raw['word/document.xml'] = text.encode()
             self._reset_counter()
+            print(variables)
             return variables
         else:
             print('Invalid file passed to Docx parser.')
