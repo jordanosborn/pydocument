@@ -14,3 +14,4 @@ file.docx
 *.c
 build/run/*
 dist/*
+~$demo2.docx

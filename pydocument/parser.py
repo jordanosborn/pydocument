@@ -145,11 +145,11 @@ class parser:
 
         """
         valid = False
-        if expr_type == 'EVAL':
+        if expression == '':
+            valid = True
+        elif expr_type == 'EVAL':
             pass
         elif expr_type == 'TEXT':
-            pass
-        else:
             pass
 
         return valid
@@ -209,34 +209,43 @@ class parser:
             if len(parsed_text_split) == 1 and keyword != 'EVAL':
                 name = f'_{keyword}_{self.type_counter[keyword]}'
                 unnamed_variable = True
+
             elif len(parsed_text_split) == 2 and keyword != 'EVAL' and keyword != 'TEXT':
                 name = parsed_text_split[1]
+
             elif keyword == 'EVAL' and len(parsed_text_split) > 3 and parsed_text_split[2] == OPERATORS['assignment']:
                     name = parsed_text_split[1]
                     operator = OPERATORS['assignment']
                     expression = utils.strings.join_all(parsed_text_split[3:], ' ')
+
             elif keyword == 'EVAL' and len(parsed_text_split) > 1:
                     name = f'_{keyword}_{self.type_counter[keyword]}'
                     unnamed_variable = True
                     operator = OPERATORS['assignment']
                     expression = utils.strings.join_all(parsed_text_split[1:], ' ')
-                    # check valid expression
+
             elif keyword == 'TEXT' and len(parsed_text_split) == 2 and parsed_text_split[1][0] != "'" and parsed_text_split[1][-1] != "'":
                 name = parsed_text_split[1]
+
             elif keyword == 'TEXT' and len(parsed_text_split) > 3 and parsed_text_split[2] == OPERATORS['assignment']:
                 name = parsed_text_split[1]
                 operator = OPERATORS['assignment']
                 expression = utils.strings.join_all(parsed_text_split[3:], ' ')
-                #check valid expression
 
             elif keyword == 'TEXT' and len(parsed_text_split) > 1:
                 name = f'_{keyword}_{self.type_counter[keyword]}'
                 unnamed_variable = True
                 operator = OPERATORS['assignment']
                 expression = utils.strings.join_all(parsed_text_split[1:], ' ')
-                # check valid expression
+
             else:
                 raise ValueError(f'\nUnrecognisable variable string\n\t{variable_text}.\n')
+
+        if not self._valid_expression(keyword, expression):
+            raise ValueError(
+                f'\nInvalid expression {expression}.' +
+                f'\n\t{variable_text}\n'
+            )
 
         if name != '' and name[0] == INTERNAL_VARIABLE_KEY and (not unnamed_variable):
             raise ValueError(
@@ -308,7 +317,6 @@ class parser:
                         )
             content.raw['word/document.xml'] = text.encode()
             self._reset_counter()
-            print(variables)
             return variables
         else:
             print('Invalid file passed to Docx parser.')

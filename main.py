@@ -8,7 +8,5 @@ def main():
 
     docx_parser.parse(a)
 
-    b = doc.from_raw('test.txt', 'txt', {'document.txt': b'hello world'})
-
 
 main()

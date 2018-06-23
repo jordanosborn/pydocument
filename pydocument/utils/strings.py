@@ -67,17 +67,18 @@ def split_string(text: str, splitter: str = ',') -> list:
         strings = []
         for i, n in enumerate(string_regex.finditer(text)):
             strings.append(str(n.group(1)[1:-1]))
-            text = text.replace(n.group(1), f'\'{i}\'')
+            text = text.replace(str(n.group(1)), f'\'{i}\'', 1)
         text_split = text.split(splitter)
-
-        for i, t in enumerate(text_split):
+        print(text_split)
+        for i in range(len(text_split)):
             text_split[i] = text_split[i].strip()
             for j, s in enumerate(strings):
-                text_split[i] = t.replace(f'\'{j}\'', f'\'{s}\'')
+                text_split[i] = text_split[i].replace(f'\'{j}\'', f'\'{s}\'')
         return text_split
     else:
         return ['']
 
+print(split_string("'hell,,o' my ,name 'i,,s'"))
 
 def join_all(ls: List[str], join_char: str) -> str:
     """Join all strings in a list.
