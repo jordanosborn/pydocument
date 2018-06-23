@@ -50,9 +50,7 @@ OPERATORS = {
         'or': 'or',
         'not': 'not'
     },
-    'assignment': {
-        '=',
-    },
+    'assignment': '=',
     'control': {
         'if': 'IF',
         'else': 'ELSE',
@@ -98,13 +96,18 @@ def find_function(keyword: str) -> Callable[[str], str]:
     elif keyword in USER_FUNCTIONS.keys():
         return USER_FUNCTIONS[keyword]
     elif keyword == 'RECALL':
-        return lambda x: ''
+        return FUNCTIONS[keyword]
     else:
         return lambda x: ''
 
 
 class parser:
     """DOCUMENT PARSER CLASS."""
+
+    def _reset_counter(self) -> None:
+        """Reset type counter."""
+        self.type_counter = {key: 0 for key in KEYWORDS}
+        self.type_counter['RECALL'] = 0
 
     def __init__(self, filetype: str) -> None:
         """Initialise a document parser.
@@ -118,6 +121,9 @@ class parser:
         # [<]([w][:][\w])[ ]+?([\w\s\S]*?)[>]([\w\s\S]*?)([<][\/](\1)?[>])$
         # Matches word tag pairs
         self.variable_regex = re.compile(r"(?<!\\)([$][{][^}]*[}]{1})")
+        self.type_counter = {key: 0 for key in KEYWORDS}
+        self.type_counter['RECALL'] = 0
+
         if self.parser_type == 'docx':
             self.parse = self._parse_docx
             self.render = self._render_docx
@@ -149,6 +155,8 @@ class parser:
         args = []
         modifiers = []
         name = ''
+        operator = ''
+        expression = ''
 
         # Split string into expression and its arguments.
         parsed_text_split = utils.strings.split_string(parsed_text, ',')
@@ -167,6 +175,7 @@ class parser:
                     modifiers.append(modifier)
                     break
 
+        unnamed_variable = False
         if keyword == '':
             if len(parsed_text_split) == 1:
                 keyword = 'RECALL'
@@ -175,21 +184,53 @@ class parser:
                 raise ValueError(f'\nUnrecognisable variable string\n\t{variable_text}.\n')
         # TODO: be careful with unnamed variables, unique name and
         else:
-            if len(parsed_text_split) > 1 and keyword != 'EVAL':
+            # Allows {keyword}, {keyword name}, {Eval name=expresssion}, {eval expression}
+            if len(parsed_text_split) == 1 and keyword != 'EVAL':
+                name = f'_{keyword}_{self.type_counter[keyword]}'
+                unnamed_variable = True
+            elif len(parsed_text_split) == 2 and keyword != 'EVAL' and keyword != 'TEXT':
                 name = parsed_text_split[1]
+            elif keyword == 'EVAL' and len(parsed_text_split) > 3 and parsed_text_split[2] == OPERATORS['assignment']:
+                    name = parsed_text_split[1]
+                    operator = OPERATORS['assignment']
+                    expression = utils.strings.join_all(parsed_text_split[3:], ' ')
+            elif keyword == 'EVAL' and len(parsed_text_split) > 1:
+                    name = f'_{keyword}_{self.type_counter[keyword]}'
+                    unnamed_variable = True
+                    operator = OPERATORS['assignment']
+                    expression = utils.strings.join_all(parsed_text_split[1:], ' ')
+                    # check valid expression
+            elif keyword == 'TEXT' and len(parsed_text_split) == 2 and parsed_text_split[1][0] != "'" and parsed_text_split[1][-1] != "'":
+                name = parsed_text_split[1]
+            elif keyword == 'TEXT' and len(parsed_text_split) > 3 and parsed_text_split[2] == OPERATORS['assignment']:
+                name = parsed_text_split[1]
+                operator = OPERATORS['assignment']
+                expression = utils.strings.join_all(parsed_text_split[3:], ' ')
+                #check valid expression
 
-        if name != '' and name[0] == INTERNAL_VARIABLE_KEY:
+            elif keyword == 'TEXT' and len(parsed_text_split) > 1:
+                name = f'_{keyword}_{self.type_counter[keyword]}'
+                unnamed_variable = True
+                operator = OPERATORS['assignment']
+                expression = utils.strings.join_all(parsed_text_split[1:], ' ')
+                # check valid expression
+            else:
+                raise ValueError(f'\nUnrecognisable variable string\n\t{variable_text}.\n')
+
+        if name != '' and name[0] == INTERNAL_VARIABLE_KEY and (not unnamed_variable):
             raise ValueError(
                 f'\nInvalid variable name {name}. Variables can\'t start with {INTERNAL_VARIABLE_KEY}.' +
                 f'\n\t{variable_text}\n'
             )
-
+        print(keyword, name, operator, expression)
+        self.type_counter[keyword] += 1
         return {
-            'type': keyword,
+            'keyword': keyword,
+            'type': '',
             'name': name,
             'text': variable_text,
-            'operator': '',
-            'expression': '',
+            'operator': operator,
+            'expression': expression,
             'args': args,
             'parsed': parsed,
             'modifiers': modifiers
@@ -218,8 +259,9 @@ class parser:
                 except ValueError as e:
                     print(e)
                 else:
-                    if parsed_variable_text['name'] not in variables.keys() or parsed_variable_text['type'] == 'RECALL':
+                    if parsed_variable_text['name'] not in variables.keys() or parsed_variable_text['keyword'] == 'RECALL':
                         variables[parsed_variable_text['name']] = {
+                            'keyword': parsed_variable_text['keyword'],
                             'type': parsed_variable_text['type'],
                             'text': parsed_variable_text['text'],
                             'operator': parsed_variable_text['operator'],
@@ -244,9 +286,11 @@ class parser:
                             f' at {pos}.\n'
                         )
             content.raw['word/document.xml'] = text.encode()
+            self._reset_counter()
             return variables
         else:
             print('Invalid file passed to Docx parser.')
+            self._reset_counter()
             return OrderedDict()
 
     def _render_docx(self, content: str, context: dict) -> str:
